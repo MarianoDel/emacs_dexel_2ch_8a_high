@@ -63,7 +63,7 @@ int main (void)
 {
     // Gpio Configuration.
     GpioInit();
-    
+
     // Systick Timer Activation
     if (SysTick_Config(64000))
         SysTickError();

@@ -12,6 +12,7 @@
 #include "tim.h"
 #include "stm32f10x.h"
 #include "hard.h"
+#include "soft_pwm.h"
 
 
 // Module Private Types Constants and Macros -----------------------------------
@@ -55,14 +56,6 @@ extern volatile unsigned short wait_ms_var;
 
 
 // Globals ---------------------------------------------------------------------
-volatile unsigned char timer1_seq_ready = 0;
-volatile unsigned short timer1_seq_cnt = 0;
-
-volatile unsigned short sync_last_capt = 0;
-volatile unsigned short sync_capt = 0;
-volatile unsigned short sync_cnt = 0;
-volatile unsigned char sync_int = 0;
-volatile unsigned char sync_verify = 0;
 
 
 // Module Functions ------------------------------------------------------------
@@ -73,11 +66,65 @@ void Wait_ms (unsigned short a)
 }
 
 
-//-------------------------------------------//
-// @brief  TIM configure.
-// @param  None
-// @retval None
-//------------------------------------------//
+//////////////////
+// TIM1 Configs //
+//////////////////
+#define VALUE_FOR_LEAST_FREQ    2133    //30KHz on 64MHz
+#define VALUE_FOR_CONSTANT_OFF    230    //3.6us tick 15.6ns
+// #define VALUE_FOR_CONSTANT_OFF    128    //2us tick 15.6ns
+void TIM1_Init_pwm_CH1_CH1N_trig_CH2 (void)
+{
+    if (!RCC_TIM1_CLK)
+        RCC_TIM1_CLKEN;
+
+    // timer configuration
+    TIM1->CR1 = 0x00 | TIM_CR1_ARPE;        //clk int / 1, auto preload enable
+    TIM1->CR2 = 0x00;
+    
+    //Reset mode, trigger with TI2
+    TIM1->SMCR |= TIM_SMCR_SMS_2 |
+        TIM_SMCR_TS_2 | TIM_SMCR_TS_1;
+
+    //CH1 output PWM mode 2 (channel active TIM1->CNT > TIM1->CCR1)
+    //CH2 input map IC2->TI2; filtered / 4 N = 6
+    TIM1->CCMR1 = 0x0070 |
+        TIM_CCMR1_CC2S_0 | TIM_CCMR1_IC2F_2 | TIM_CCMR1_IC2F_1;
+    
+    TIM1->CCMR2 = 0x0000;
+    TIM1->CCER |= TIM_CCER_CC1E | TIM_CCER_CC1NE;    // CH1 CH1N enable
+    
+    TIM1->ARR = VALUE_FOR_LEAST_FREQ;    // each tick 15.6ns
+
+    TIM1->CNT = 0;
+    TIM1->PSC = 0;
+
+    // general enable for OC, and dead-time    
+    // TIM1->BDTR |= TIM_BDTR_MOE;
+    TIM1->BDTR |= TIM_BDTR_MOE | (0 + 20);    //300ns @ 64MHz
+    // TIM1->BDTR |= TIM_BDTR_MOE | (0 + 5);    //100ns @ 48MHz    
+    // TIM1->BDTR |= TIM_BDTR_MOE | (128 + 28);    //3.8us @ 48MHz    
+        
+    // Enable timer ver UDIS
+    TIM1->CCR1 = VALUE_FOR_CONSTANT_OFF;
+    TIM1->CR1 |= TIM_CR1_CEN;
+}
+
+
+void TIM1_Enable (void)
+{
+    TIM1->ARR = VALUE_FOR_LEAST_FREQ;
+    TIM1->EGR |= TIM_EGR_UG;
+    LED_ON;
+}
+
+
+void TIM1_Disable (void)
+{
+    TIM1->ARR = 0;
+    LED_OFF;
+}
+
+
 void TIM1_Init (void)
 {
     if (!RCC_TIM1_CLK)
@@ -124,9 +171,9 @@ void TIM1_UP_IRQHandler (void)
         TIM1->SR &= ~TIM_SR_UIF;
 
     //Code Handler
-    timer1_seq_ready = 1;
-    if (timer1_seq_cnt < 65000)
-        timer1_seq_cnt++;
+    // timer1_seq_ready = 1;
+    // if (timer1_seq_cnt < 65000)
+    //     timer1_seq_cnt++;
     
 }
 
@@ -138,12 +185,12 @@ void TIM1_CC_IRQHandler (void)
         TIM1->SR &= ~TIM_SR_CC4IF;
 
     //Code Handler
-    sync_last_capt = sync_capt;
-    sync_capt = TIM1->CCR4;
-    sync_cnt = timer1_seq_cnt;
-    timer1_seq_cnt = 0;
-    sync_int = 1;
-    sync_verify = 1;
+    // sync_last_capt = sync_capt;
+    // sync_capt = TIM1->CCR4;
+    // sync_cnt = timer1_seq_cnt;
+    // timer1_seq_cnt = 0;
+    // sync_int = 1;
+    // sync_verify = 1;
 
     // if (LED1)
     //     LED1_OFF;
@@ -151,91 +198,6 @@ void TIM1_CC_IRQHandler (void)
     //     LED1_ON;
     
 }
-
-
-unsigned char TIM1_SyncGet (void)
-{
-    return sync_int;
-}
-
-
-void TIM1_SyncReset (void)
-{
-    sync_int = 0;
-}
-
-
-unsigned char TIM1_SyncVerify (unsigned char * freq_int, unsigned char * freq_dec)
-{
-    if ((!sync_verify) ||
-        (timer1_seq_cnt == 65000))
-        return 0;
-
-    unsigned int calc_int = 0;
-    unsigned int calc_dec = 0;
-    unsigned int calc_div = 0;
-
-    calc_div = 1000 * sync_cnt + sync_capt - sync_last_capt;
-
-    if (calc_div == 0)
-        return 0;
-
-    calc_dec = 7200 * 1000 * 100;
-    calc_dec = calc_dec / calc_div;
-    
-    calc_int = 7200 * 1000;
-    calc_int = calc_int / calc_div;
-
-    calc_dec = calc_dec - calc_int * 100;
-
-    *freq_int = (unsigned char) calc_int;
-    *freq_dec = (unsigned char) calc_dec;
-
-    return 1;
-}
-
-// void TIM_1_Init (void)    //for one pulse mode
-// {
-//     if (!RCC_TIM1_CLK)
-//         RCC_TIM1_CLKEN;
-
-//     //Configuracion del timer.
-//     TIM1->CR1 |= TIM_CR1_OPM;        //clk int / 1; upcounting; one pulse
-//     // TIM1->CR1 = 0x00;        //clk int / 1;
-//     // TIM1->CR1 |= TIM_CR1_ARPE;        //clk int / 1, Preload;
-//     // TIM1->CR2 |= TIM_CR2_MMS_1;        //UEV -> TRG0
-//     TIM1->CR2 = 0x00;
-//     //TIM1->SMCR |= TIM_SMCR_MSM | TIM_SMCR_SMS_2 | TIM_SMCR_SMS_1 | TIM_SMCR_TS_1;    //link timer3
-//     TIM1->SMCR = 0x0000;
-
-//     TIM1->CCMR1 = 0x0060;            //CH1 output PWM mode 1 (channel active TIM1->CNT < TIM1->CCR1)
-// #ifdef USE_CHANNELS_WITH_PRELOAD
-//     TIM1->CCMR1 |= TIM_CCMR1_OC1PE | TIM_CCMR1_OC2PE;
-// #endif
-//     TIM1->CCMR2 = 0x0000;
-//     // TIM1->CCER |= TIM_CCER_CC1NE | TIM_CCER_CC1NP | TIM_CCER_CC2NE | TIM_CCER_CC2NP;
-//     TIM1->CCER |= TIM_CCER_CC1E;
-        
-//     TIM1->BDTR |= TIM_BDTR_MOE;
-//     TIM1->ARR = DUTY_100_PERCENT;    //cada tick 20.83ns con PSC = 0
-
-//     TIM1->CNT = 0;
-// // #if defined USE_FREQ_18KHZ
-// //     TIM1->PSC = 3;
-// // #elif defined USE_FREQ_9KHZ
-// //     TIM1->PSC = 7;
-// // #elif defined USE_FREQ_4_5KHZ
-// //     TIM1->PSC = 15;
-// // #else
-// // #error "Select working frequency on hard.h"
-// // #endif
-
-//     // Enable timer ver UDIS
-//     //TIM1->DIER |= TIM_DIER_UIE;
-//     // TIM1->CR1 |= TIM_CR1_CEN;
-
-//     TIM1->CCR1 = 0;
-// }
 
 
 void TIM3_Init (void)
@@ -398,19 +360,6 @@ void TIM6_Change (unsigned short new_arr, unsigned short new_psc)
 }
 
 
-void TIM7_IRQHandler (void)	//1mS
-{
-    if (TIM7->SR & 0x01)
-        TIM7->SR = 0x00;    //bajar flag
-
-    // if (LED2)
-    //     LED2_OFF;
-    // else
-    //     LED2_ON;
-    
-}
-
-
 // void TIM6_IRQHandler (void)	//100mS
 // {
 // 	UART_Tim6 ();
@@ -421,72 +370,103 @@ void TIM7_IRQHandler (void)	//1mS
 // }
 
 
-//inicializo el TIM7 para interrupciones
+//////////////////
+// TIM7 Configs //
+//////////////////
 void TIM7_Init(void)
 {
-//    Counter Register (TIMx_CNT)
-//    Prescaler Register (TIMx_PSC)
-//    Auto-Reload Register (TIMx_ARR)
-//    The counter clock frequency CK_CNT is equal to fCK_PSC / (PSC[15:0] + 1)
-//
-//    Quiero una interrupcion por ms CK_INT es 72MHz
-
     //---- Clk ----//
     if (!RCC_TIM7_CLK)
         RCC_TIM7_CLKEN;
 
     //--- Config ----//
-    TIM7->ARR = 1000;
-    //TIM7->ARR = 100;
+    TIM7->ARR = 25 - 1;    // ~40KHz
     TIM7->CNT = 0;
-    TIM7->PSC = 71;
-    TIM7->EGR = TIM_EGR_UG; //update registers
+    TIM7->PSC = 63;
 
     // Enable timer ver UDIS
     TIM7->DIER |= TIM_DIER_UIE;
     TIM7->CR1 |= TIM_CR1_CEN;
 
-    //Habilito NVIC
-    //Interrupcion timer7.
+    // NVIC Enable
+    // Interrupt timer7. priority 10
     NVIC_EnableIRQ(TIM7_IRQn);
     NVIC_SetPriority(TIM7_IRQn, 10);
 }
 
-// void TIM6_Init(void)
-// {
-// 	NVIC_InitTypeDef NVIC_InitStructure;
-// //    		Counter Register (TIMx_CNT)
-// //    		Prescaler Register (TIMx_PSC)
-// //    		Auto-Reload Register (TIMx_ARR)
-// //			The counter clock frequency CK_CNT is equal to fCK_PSC / (PSC[15:0] + 1)
 
-// //			Quiero una interrupcion por ms CK_INT es 72MHz
+void TIM7_IRQHandler (void)
+{
+    if (TIM7->SR & 0x01)
+    {
+        TIM7->SR = 0x00;    //low flag
 
-// 	//---- Clk ----//
-// 	if (!(RCC->APB1ENR & 0x00000010))
-// 		RCC->APB1ENR |= 0x00000010;
+        // if (LED2)
+        //     LED2_OFF;
+        // else
+        //     LED2_ON;
 
-// 	//--- Config ----//
-// 	TIM6->ARR = 10000; //100mS.
-// 	TIM6->CNT = 0;
-// 	TIM6->PSC = 719;
-// 	TIM6->EGR = TIM_EGR_UG;
-
-// 	// Enable timer ver UDIS
-// 	TIM6->DIER |= TIM_DIER_UIE;
-// 	TIM6->CR1 |= TIM_CR1_CEN;
-
-// 	//Habilito NVIC
-// 	//Interrupcion timer6.
-// 	NVIC_InitStructure.NVIC_IRQChannel = TIM6_IRQn;
-// 	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 11;
-// 	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 11;
-// 	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-// 	NVIC_Init(&NVIC_InitStructure);
-// }
+        Soft_PWM_Int_Handler ();
+    }    
+}
 
 
-//-- Timer 8 Functions --
+
+
+//////////////////////////////
+// TIM8 Configs - Functions //
+//////////////////////////////
+void TIM8_Init_pwm_CH1_CH1N_trig_CH2 (void)
+{
+    if (!RCC_TIM8_CLK)
+        RCC_TIM8_CLKEN;
+
+    // timer configuration
+    TIM8->CR1 = 0x00 | TIM_CR1_ARPE;        //clk int / 1, auto preload enable
+    TIM8->CR2 = 0x00;
+    
+    //Reset mode, trigger with TI2
+    TIM8->SMCR |= TIM_SMCR_SMS_2 |
+        TIM_SMCR_TS_2 | TIM_SMCR_TS_1;
+
+    //CH1 output PWM mode 2 (channel active TIM8->CNT > TIM8->CCR1)
+    //CH2 input map IC2->TI2; filtered / 4 N = 6
+    TIM8->CCMR1 = 0x0070 |
+        TIM_CCMR1_CC2S_0 | TIM_CCMR1_IC2F_2 | TIM_CCMR1_IC2F_1;
+    
+    TIM8->CCMR2 = 0x0000;
+    TIM8->CCER |= TIM_CCER_CC1E | TIM_CCER_CC1NE;    // CH1 CH1N enable
+    
+    TIM8->ARR = VALUE_FOR_LEAST_FREQ;    // each tick 15.6ns
+
+    TIM8->CNT = 0;
+    TIM8->PSC = 0;
+
+    // general enable for OC, and dead-time    
+    // TIM8->BDTR |= TIM_BDTR_MOE;
+    TIM8->BDTR |= TIM_BDTR_MOE | (0 + 20);    //300ns @ 64MHz
+    // TIM8->BDTR |= TIM_BDTR_MOE | (0 + 5);    //100ns @ 48MHz    
+    // TIM8->BDTR |= TIM_BDTR_MOE | (128 + 28);    //3.8us @ 48MHz    
+        
+    // Enable timer ver UDIS
+    TIM8->CCR1 = VALUE_FOR_CONSTANT_OFF;
+    TIM8->CR1 |= TIM_CR1_CEN;
+}
+
+
+void TIM8_Enable (void)
+{
+    TIM8->ARR = VALUE_FOR_LEAST_FREQ;
+    TIM8->EGR |= TIM_EGR_UG;        
+}
+
+
+void TIM8_Disable (void)
+{
+    TIM8->ARR = 0;
+}
+
+
 void TIM8_Init (void)
 {
 //    Counter Register (TIMx_CNT)

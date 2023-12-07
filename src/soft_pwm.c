@@ -10,9 +10,7 @@
 
 // Includes --------------------------------------------------------------------
 #include "soft_pwm.h"
-#include "hard.h"
 #include "tim.h"
-#include "stm32f0xx.h"
 
 
 // Module Private Types & Macros -----------------------------------------------
@@ -77,27 +75,25 @@ void Soft_PWM_Set_Channels (unsigned char ch, unsigned short value)
 
 void Soft_PWM_Set_Output_Ch2 (void)
 {
-    // TIM1->ARR = VALUE_FOR_LEAST_FREQ;
-    // TIM1->EGR |= TIM_EGR_UG;    
+    TIM8_Enable ();    
 }
 
 
 void Soft_PWM_Reset_Output_Ch2 (void)
 {
-    // TIM1->ARR = 0;
+    TIM8_Disable ();
 }
 
 
 void Soft_PWM_Set_Output_Ch1 (void)
 {
-    TIM1->ARR = VALUE_FOR_LEAST_FREQ;
-    TIM1->EGR |= TIM_EGR_UG;
+    TIM1_Enable ();
 }
 
 
 void Soft_PWM_Reset_Output_Ch1 (void)
 {
-    TIM1->ARR = 0;
+    TIM1_Disable ();
 }
 
 

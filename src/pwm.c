@@ -15,7 +15,7 @@
 
 
 // Module Private Types & Macros -----------------------------------------------
-#define SOFT_PWM_STEPS    256
+#define SOFT_PWM_STEPS    255
 
 
 // Externals -------------------------------------------------------------------

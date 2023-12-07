@@ -15,15 +15,16 @@
 
 #include "tim.h"
 #include "dac.h"
+#include "soft_pwm.h"
 
 // #include "pwm.h"
-#include "adc.h"
-#include "dma.h"
+// #include "adc.h"
+// #include "dma.h"
 // #include "temperatures.h"
 #include "usart.h"
 #include "utils.h"
 
-#include "dsp.h"
+// #include "dsp.h"
 
 #include <stdio.h>
 
@@ -40,41 +41,31 @@
 void TF_Led (void);
 
 void TF_Led_Dac (void);
-// void TF_TIM16_Pwm_CH1N (void);
-// void TF_TIM14_Pwm_CH1 (void);
-// void TF_TIM3_CH1_ConstantOff_TIM3_CH2_TriggerInput (void);
-// void TF_TIM1_CH1_ConstantOff_TIM1_CH2_TriggerInput (void);
-// void TF_Two_Complete_Channels_Hardware (void);
+void TF_Two_Complete_Channels_Hardware (void);
 
-// void TF_Two_Complete_Channels_Hardware_With_Offset (void);
-// void TF_TIM17_Interrupt (void);
-// void TF_TIM17_Interrupt_Soft_Pwm (void);
-// void TF_Two_Complete_Channels_Hardware_With_Offset_Soft_PWM (void);
+void TF_Soft_Pwm (void);
 
-// void TF_Usart1_Tx (void);
-// void TF_Usart1_Tx_Rx_Int (void);
-// void TF_Two_Complete_Channels_Usart (void);
+void TF_Usart3_Tx (void);
+void TF_Usart3_Tx_Rx_Int (void);
+void TF_Two_Complete_Channels_Usart (void);
+
 
 // Module Functions ------------------------------------------------------------
 void TF_Hardware_Tests (void)
 {
     // Begin Hardware Tests - check test_functions module
-    TF_Led();
-    TF_Led_Dac ();
-    // TF_TIM16_Pwm_CH1N ();
-    // TF_TIM14_Pwm_CH1 ();
-    // TF_TIM3_CH1_ConstantOff_TIM3_CH2_TriggerInput ();
-    // TF_TIM1_CH1_ConstantOff_TIM1_CH2_TriggerInput ();
+    // TF_Led();
+
+    // TF_Led_Dac ();
+
     // TF_Two_Complete_Channels_Hardware ();
 
-    // TF_Usart1_Tx ();
-    // TF_Usart1_Tx_Rx_Int ();
+    TF_Soft_Pwm ();
+
+    // TF_Usart3_Tx ();
+    // TF_Usart3_Tx_Rx_Int ();
     // TF_Two_Complete_Channels_Usart ();
     
-    // TF_Two_Complete_Channels_Hardware_With_Offset ();
-    // TF_TIM17_Interrupt ();
-    // TF_TIM17_Interrupt_Soft_Pwm ();
-    // TF_Two_Complete_Channels_Hardware_With_Offset_Soft_PWM ();
     // End Hardware Tests -------------------------------
 }
 
@@ -117,69 +108,46 @@ void TF_Led_Dac (void)
 }
 
 
-// void TF_TIM1_CH1_ConstantOff_TIM1_CH2_TriggerInput (void)
-// {
-//     TIM_14_Init ();
-//     Update_TIM14_CH1 (4095);
-//     TIM_1_Init_pwm_neg_CH1_trig_CH2 ();
-
-//     while (1)
-//     {
-//         Wait_ms(1);
-//     }
-// }
-
-
-// void TF_Two_Complete_Channels_Hardware (void)
-// {
-//     // Start of Complete Channel 2
-//     TIM_14_Init ();
-//     TIM_1_Init_pwm_neg_CH1_trig_CH2 ();
+void TF_Two_Complete_Channels_Hardware (void)
+{
+    DAC_Config ();
     
-//     // Start of Complete Channel 1
-//     TIM_16_Init ();
-//     TIM_3_Init_pwm_neg_CH1_trig_CH2 ();    
-
-//     Update_TIM14_CH1 (200);
-//     Update_TIM16_CH1N (200);
+    // Start of Complete Channel 1
+    DAC_Output1(512);
+    TIM1_Init_pwm_CH1_CH1N_trig_CH2 ();
     
-//     while (1);
+    // Start of Complete Channel 2
+    DAC_Output2(512);    
+    TIM8_Init_pwm_CH1_CH1N_trig_CH2 ();    
     
-// }
-
-
-// void TF_TIM17_Interrupt (void)
-// {
-//     TIM_17_Init ();
-
-//     TIM17Enable();
-//     while (1);
+    while (1);
     
-// }
+}
 
 
-// void TF_TIM17_Interrupt_Soft_Pwm (void)
-// {
-//     TIM_17_Init ();
-
-//     // Start of Complete Pote Channel 1    
-//     TIM_14_Init ();
-//     Update_TIM14_CH1 (125);    
-//     TIM_1_Init_pwm_neg_CH1_trig_CH2 ();
-
-//     // Start of Complete Pote Channel 2
-//     TIM_16_Init ();
-//     Update_TIM16_CH1N (125);
-//     TIM_3_Init_pwm_neg_CH1_trig_CH2 ();    
+void TF_Soft_Pwm (void)
+{
+    // test only on ch1
+    TIM1_Init_pwm_CH1_CH1N_trig_CH2 ();
     
-//     PWM_Soft_Set_Channels (1, 16);
-//     PWM_Soft_Set_Channels (2, 0);
-    
-//     TIM17Enable();
-//     while (1);
-    
-// }
+    // Init TIM 7 for Soft or Int init
+    TIM7_Init ();
 
+    while (1)
+    {
+        Wait_ms (5000);
+
+        Soft_PWM_Set_Channels (1, 0);    
+
+        for (int i = 0; i < (255 + 1); i++)
+        {
+            Soft_PWM_Set_Channels (1, i);
+            Wait_ms(1000);
+        }
+
+        Wait_ms (5000);
+    }
+}
 
 void TF_Usart3_Tx (void)
 {
@@ -264,12 +232,15 @@ void TF_Two_Complete_Channels_Usart (void)
                         {
                             if ((ch1 + ch2) == sum)
                             {
-                                channel1 = ch1;
-                                channel2 = ch2;
+                                channel1 = ch1 << 4;    // to 4092
+                                channel2 = ch2 << 4;
 
                                 // always have a minimun for ints
-                                // Update_TIM14_CH1 ((channel2 << 4) + 40);
-                                // Update_TIM16_CH1N ((channel1 << 4) + 40);
+                                if (channel1 < 40)
+                                    channel1 = 40;
+
+                                if (channel2 < 40)
+                                    channel2 = 40;
                             }
                             else
                                 Usart3Send("err verif\n");

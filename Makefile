@@ -73,18 +73,11 @@ SRC += ./src/hard.c
 SRC += ./src/dac.c
 
 # SRC += ./src/dsp.c
-# SRC += ./src/comms_from_rasp.c
-# SRC += ./src/treatment.c
-# SRC += ./src/utils.c
 SRC += ./src/test_functions.c
+SRC += ./src/soft_pwm.c
+SRC += ./src/utils.c
 
-# SRC += ./src/comms_channels.c
-# SRC += ./src/antennas.c
-# SRC += ./src/signals.c
-# SRC += ./src/errors.c
 
-# SRC += ./src/tamper_funcs.c
-# SRC += ./src/flash_program.c
 
 
 ## Core Support

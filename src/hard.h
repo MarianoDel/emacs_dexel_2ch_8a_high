@@ -74,7 +74,7 @@
 // PA8 Alternative TIM1_CH1
 // PA9 Alternative TIM1_CH2
 
-// PA11 NC
+// PA10 PA11 NC
 
 // PA12
 #define LED    ((GPIOA->ODR & 0x1000) != 0)

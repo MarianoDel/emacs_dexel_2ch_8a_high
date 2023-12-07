@@ -39,10 +39,10 @@
 //--- Exported Functions ------------------------------
 void Wait_ms (unsigned short);
 
+void TIM1_Init_pwm_CH1_CH1N_trig_CH2 (void);
 void TIM1_Init (void);
-unsigned char TIM1_SyncGet (void);
-void TIM1_SyncReset (void);
-unsigned char TIM1_SyncVerify (unsigned char * freq_int, unsigned char * freq_dec);
+void TIM1_Enable (void);
+void TIM1_Disable (void);
 
 void TIM3_Init (void);
 
@@ -63,7 +63,10 @@ void TIM7_Init(void);
 void TIM7_IRQHandler (void);
 
 // Timer 8 Functions
+void TIM8_Init_pwm_CH1_CH1N_trig_CH2 (void);
 void TIM8_Init (void);
+void TIM8_Enable (void);
+void TIM8_Disable (void);
 void TIM8_Update_CH1 (unsigned short a);
 void TIM8_Update_CH2 (unsigned short a);
 void TIM8_Update_CH3 (unsigned short a);
