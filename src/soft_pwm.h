@@ -15,6 +15,7 @@
 
 
 // Exported Types Constants and Macros -----------------------------------------
+#define SOFT_PWM_STEPS    255
 
 
 

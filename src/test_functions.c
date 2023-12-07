@@ -142,7 +142,7 @@ void TF_Soft_Pwm (void)
         for (int i = 0; i < (255 + 1); i++)
         {
             Soft_PWM_Set_Channels (1, i);
-            Wait_ms(1000);
+            Wait_ms(200);
         }
 
         Wait_ms (5000);
