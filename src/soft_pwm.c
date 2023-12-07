@@ -21,6 +21,7 @@
 
 // Globals ---------------------------------------------------------------------
 unsigned short soft_pwm_cnt = 0;
+// unsigned short soft_pwm_steps = 0;
 unsigned short soft_saved_pwm_ch1 = 0;
 unsigned short soft_saved_pwm_ch2 = 0;
 
@@ -44,6 +45,7 @@ void Soft_PWM_Int_Handler (void)
             Soft_PWM_Reset_Output_Ch2 ();
         
         if (soft_pwm_cnt < (SOFT_PWM_STEPS - 1))
+        // if (soft_pwm_cnt < (soft_pwm_steps - 1))            
             soft_pwm_cnt++;
         else
             soft_pwm_cnt = 0;

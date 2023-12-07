@@ -63,8 +63,7 @@ int main (int argc, char *argv[])
 {
     printf("Start of PWM mapping...\n");
 
-    Test_Dmx_Map_Pre ();
-    // Test_Dmx_Map_Post_Ramp ();
+    Test_Dmx_Map_Post_Ramp ();
     // Test_Dmx_Map_Post_Step ();
     // Test_Dmx_Map_Post_Individual ();
 
@@ -113,10 +112,12 @@ void Test_Dmx_Map_Post_Ramp (void)
 
     unsigned short pwm_ena [4096] = { 0 };
     unsigned short pwm_ch [4096] = { 0 };
+    float eq_pwm [4096] = { 0.0 };
     
     for (int i = 0; i < 4096; i++)
     {
         PWM_Map_Post_Filter(i, &pwm_ena[i], &pwm_ch[i]);
+        eq_pwm [i] = pwm_ena[i] * pwm_ch[i] / 255.0;
     }
     
     ShowVectorUShort("\nVector pwm ena:\n", pwm_ena, 255);
@@ -134,43 +135,44 @@ void Test_Dmx_Map_Post_Ramp (void)
     }
 
     Vector_UShort_To_File (file, "pwm_ena", pwm_ena, 4096);
-    Vector_UShort_To_File (file, "pwm_ch", pwm_ch, 4096);    
+    Vector_UShort_To_File (file, "pwm_ch", pwm_ch, 4096);
+    Vector_Float_To_File (file, "eq_pwm", eq_pwm, 4096);    
 
     printf("\nRun by hand python3 simul_outputs.py\n");
     
 }
 
 
-void Test_Dmx_Map_Pre (void)
-{
-    printf("test dmx -> pwm conversion for pwm_ena & pwm_ch\n");
+// void Test_Dmx_Map_Pre (void)
+// {
+//     printf("test dmx -> pwm conversion for pwm_ena & pwm_ch\n");
 
-    unsigned short pwm_ena [256] = { 0 };
-    unsigned short pwm_ch [256] = { 0 };
+//     unsigned short pwm_ena [256] = { 0 };
+//     unsigned short pwm_ch [256] = { 0 };
     
-    for (int i = 0; i < 256; i++)
-        PWM_Map_Pre_Filter(i, &pwm_ena[i], &pwm_ch[i]);
+//     for (int i = 0; i < 256; i++)
+//         PWM_Map_Pre_Filter(i, &pwm_ena[i], &pwm_ch[i]);
     
-    ShowVectorUShort("\nVector pwm ena:\n", pwm_ena, 256);
-    ShowVectorUShort("\nVector pwm ch:\n", pwm_ch, 256);
+//     ShowVectorUShort("\nVector pwm ena:\n", pwm_ena, 256);
+//     ShowVectorUShort("\nVector pwm ch:\n", pwm_ch, 256);
 
-    ///////////////////////////
-    // Backup Data to a file //
-    ///////////////////////////
-    FILE * file = fopen("data.txt", "w");
+//     ///////////////////////////
+//     // Backup Data to a file //
+//     ///////////////////////////
+//     FILE * file = fopen("data.txt", "w");
 
-    if (file == NULL)
-    {
-        printf("data file not created!\n");
-        return;
-    }
+//     if (file == NULL)
+//     {
+//         printf("data file not created!\n");
+//         return;
+//     }
 
-    Vector_UShort_To_File (file, "pwm_ena", pwm_ena, 256);
-    Vector_UShort_To_File (file, "pwm_ch", pwm_ch, 256);    
+//     Vector_UShort_To_File (file, "pwm_ena", pwm_ena, 256);
+//     Vector_UShort_To_File (file, "pwm_ch", pwm_ch, 256);    
 
-    printf("\nRun by hand python3 simul_outputs.py\n");
+//     printf("\nRun by hand python3 simul_outputs.py\n");
     
-}
+// }
 
 
 extern unsigned char top_min_curr;
@@ -259,8 +261,8 @@ void Test_Dmx_Map_Post_Individual (void)
     curr_mult = 2;
     roof = 64;
 
-    PWM_Soft_Handler_Low_Freq_Roof_Set(roof);
-    PWM_Map_Post_Filter_Top_Multiplier(110, curr_mult, 1);
+    // PWM_Soft_Handler_Low_Freq_Roof_Set(roof);
+    PWM_Map_Post_Filter_Top_Multiplier(110, curr_mult);
 
     for (int i = 0; i < points; i++)
     {

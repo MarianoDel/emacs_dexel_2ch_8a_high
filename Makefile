@@ -72,11 +72,13 @@ SRC += ./src/dma.c
 SRC += ./src/hard.c
 SRC += ./src/dac.c
 
-# SRC += ./src/dsp.c
 SRC += ./src/test_functions.c
+SRC += ./src/dsp.c
 SRC += ./src/soft_pwm.c
 SRC += ./src/utils.c
-
+SRC += ./src/comms.c
+SRC += ./src/filters_and_offsets.c
+SRC += ./src/pwm.c
 
 
 

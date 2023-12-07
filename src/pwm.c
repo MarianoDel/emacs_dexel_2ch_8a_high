@@ -105,5 +105,9 @@ void PWM_Map_Post_Filter (unsigned short dmx_filtered, unsigned short * pwm_ena,
 }
 
 
+void PWM_Soft_Handler_Low_Freq_Roof_Set (unsigned short new_roof)
+{
+    // soft_pwm_steps = new_roof;    
+}
 
 //--- end of file ---//

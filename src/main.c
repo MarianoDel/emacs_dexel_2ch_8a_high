@@ -13,20 +13,15 @@
 #include "stm32f10x.h"
 #include "hard.h"
 
-#include "adc.h"
-// #include "tim.h"
 #include "gpio.h"
-// #include "usart.h"
-// #include "dma.h"
+#include "dac.h"
+#include "tim.h"
+#include "usart.h"
 
-// #include "comms.h"
 #include "test_functions.h"
-
-// #include "antennas.h"
-// #include "comms_channels.h"
-// #include "parameters.h"
-// #include "tamper_funcs.h"
-// #include "flash_program.h"
+#include "soft_pwm.h"
+#include "comms.h"
+#include "filters_and_offsets.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -69,66 +64,66 @@ int main (void)
         SysTickError();
 
     // Hardware Tests
-    TF_Hardware_Tests ();
+    // TF_Hardware_Tests ();
 
     // Hardware Inits. ---------------------------
-    // Start of Complete Channel 2
-    // TIM_14_Init ();
-    // TIM_1_Init_pwm_neg_CH1_trig_CH2 ();
+    DAC_Config ();
     
     // Start of Complete Channel 1
-    // TIM_16_Init ();
-    // TIM_3_Init_pwm_neg_CH1_trig_CH2 ();
-
-    // Start Usart
-    // Usart1Config();
-
-    // Init TIM 17 for Soft or Int init
-    // TIM_17_Init ();
-
-    // PWM_Soft_Set_Channels (1, 0);
-    // PWM_Soft_Set_Channels (2, 0);
+    DAC_Output1(0);
+    TIM1_Init_pwm_CH1_CH1N_trig_CH2 ();
     
+    // Start of Complete Channel 2
+    DAC_Output2(0);
+    TIM8_Init_pwm_CH1_CH1N_trig_CH2 ();    
+
+    // Start Usart3 for Comms
+    Usart3Config();
+
+    // Init TIM 7 for Soft_Pwm
+    TIM7_Init ();
+
+    Soft_PWM_Set_Channels (1, 0);
+    Soft_PWM_Set_Channels (2, 0);
+            
     main_state_e main_state = MAIN_HARD_INIT;
 
     while (1)
     {
-        // switch (main_state)
-        // {
-        // case MAIN_HARD_INIT:
-        //     FiltersAndOffsets_Filters_Reset ();
-
-        //     // tim17 for soft pwm
-        //     TIM17Enable();
+        switch (main_state)
+        {
+        case MAIN_HARD_INIT:
+            FiltersAndOffsets_Filters_Reset ();
             
-        //     main_state++;
-        //     break;
 
-        // case MAIN_RUNNING:
-        //     if (!timer_standby)
-        //     {
-        //         timer_standby = 1;
-        //         FiltersAndOffsets_Post_Mapping_SM (last_ch_values);
-        //     }            
-        //     break;
+            main_state++;
+            break;
 
-        // case MAIN_IN_OVERTEMP:
+        case MAIN_RUNNING:
+            if (!timer_standby)
+            {
+                timer_standby = 1;
+                FiltersAndOffsets_Post_Mapping_SM (last_ch_values);
+            }            
+            break;
 
-        //     // if (!timer_check_temp)
-        //     // {
-        //     //     if (Temp_Channel < TEMP_RECONNECT)
-        //     //         main_state = MAIN_HARD_INIT;
+        case MAIN_IN_OVERTEMP:
+
+            // if (!timer_check_temp)
+            // {
+            //     if (Temp_Channel < TEMP_RECONNECT)
+            //         main_state = MAIN_HARD_INIT;
                 
-        //     //     timer_check_temp = 2000;    //check again in two seconds            
-        //     // }
-        //     break;
+            //     timer_check_temp = 2000;    //check again in two seconds            
+            // }
+            break;
 
-        // default:
-        //     main_state = MAIN_HARD_INIT;
-        //     break;
-        // }
+        default:
+            main_state = MAIN_HARD_INIT;
+            break;
+        }
 
-        // Comms_Update();
+        Comms_Update();
 
     }    //end of while 1
 

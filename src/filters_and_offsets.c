@@ -13,6 +13,8 @@
 #include "dsp.h"
 #include "pwm.h"
 #include "tim.h"
+#include "soft_pwm.h"
+#include "dac.h"
 
 
 // Module Private Types & Macros -----------------------------------------------
@@ -44,7 +46,7 @@ unsigned char running_current_config = 0;
 filters_and_offsets_e filters_sm = FILTERS_BKP_CONFIG_AND_CHANNELS;
 void FiltersAndOffsets_Post_Mapping_SM (volatile unsigned char * ch_dmx_val)
 {    
-    unsigned short ch1_pwm, ch2_pwm, ena1_pwm, ena2_pwm;
+    unsigned short ch1_analog, ch2_analog, ena1_pwm, ena2_pwm;
     int calc;
     
     switch (filters_sm)
@@ -83,17 +85,17 @@ void FiltersAndOffsets_Post_Mapping_SM (volatile unsigned char * ch_dmx_val)
     case FILTERS_SET_PWM:
         PWM_Map_Post_Filter (limit_output[0],
                             &ena1_pwm,
-                            &ch1_pwm);
+                            &ch1_analog);
 
-        PWM_Soft_Set_Channels (1, ena1_pwm);
-        PWM_Update_CH1(ch1_pwm);
+        Soft_PWM_Set_Channels (1, ena1_pwm);        
+        DAC_Output1(ch1_analog);
 
         PWM_Map_Post_Filter (limit_output[1],
                             &ena2_pwm,
-                            &ch2_pwm);
+                            &ch2_analog);
 
-        PWM_Soft_Set_Channels (2, ena2_pwm);
-        PWM_Update_CH2(ch2_pwm);
+        Soft_PWM_Set_Channels (2, ena2_pwm);
+        DAC_Output2(ch2_analog);        
         
         filters_sm++;
         break;
