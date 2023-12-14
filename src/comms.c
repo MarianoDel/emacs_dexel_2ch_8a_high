@@ -131,32 +131,36 @@ void Comms_Update (void)
             }
             else if (cint == '5')
             {
-                PWM_Map_Post_Filter_Top_Multiplier(103, 10);    // for 100pts min
-                // PWM_Map_Post_Filter_Top_Multiplier(109, 10, 3);    // for 33pts min                    
+                PWM_Map_Post_Filter_Top_Multiplier(107, 10);    // 5amps adjust
+                // PWM_Map_Post_Filter_Top_Multiplier(103, 10);    // for 100pts min
                 PWM_Soft_Handler_Low_Freq_Roof_Set (256);
             }
             else if (cint == '4')
             {
-                PWM_Map_Post_Filter_Top_Multiplier(106, 8);    // for 100pts min
-                // PWM_Map_Post_Filter_Top_Multiplier(113, 8, 3);    // for 33pts min                    
+                PWM_Map_Post_Filter_Top_Multiplier(112, 8);    // 4amps adjust
+                // PWM_Map_Post_Filter_Top_Multiplier(106, 8);    // for 100pts min                
                 PWM_Soft_Handler_Low_Freq_Roof_Set (256);
             }
             else if (cint == '3')
             {
-                PWM_Map_Post_Filter_Top_Multiplier(111, 6);    // for 100pts min
-                // PWM_Map_Post_Filter_Top_Multiplier(120, 6, 2);    // for 33pts min                    
+                PWM_Map_Post_Filter_Top_Multiplier(122, 6);    // 3.1A adjust
+                // PWM_Map_Post_Filter_Top_Multiplier(111, 6);    // for 100pts min                
                 PWM_Soft_Handler_Low_Freq_Roof_Set (256);
             }
             else if (cint == '2')
             {
-                PWM_Map_Post_Filter_Top_Multiplier(108, 4);    // for 100pts min
-                // PWM_Map_Post_Filter_Top_Multiplier(119, 4, 2);    // for 33pts min                    
+                PWM_Map_Post_Filter_Top_Multiplier(138, 4);    // 2.06A
+                // PWM_Map_Post_Filter_Top_Multiplier(126, 4);    // 1.8A                
+                // PWM_Map_Post_Filter_Top_Multiplier(158, 4);    // 2.5A                
+                // PWM_Map_Post_Filter_Top_Multiplier(108, 4);    // 1.37A for 100pts min                
                 PWM_Soft_Handler_Low_Freq_Roof_Set (128);
             }
             else if (cint == '1')
             {
-                PWM_Map_Post_Filter_Top_Multiplier(110, 2);    // for 100pts min
-                // PWM_Map_Post_Filter_Top_Multiplier(135, 2, 1);    // for 33pts min                    
+                PWM_Map_Post_Filter_Top_Multiplier(172, 2);    // 1.03 adjust
+                // PWM_Map_Post_Filter_Top_Multiplier(167, 2);    // 0.98 adjust                
+                // PWM_Map_Post_Filter_Top_Multiplier(200, 2);    // 1.2A adjust                
+                // PWM_Map_Post_Filter_Top_Multiplier(110, 2);    // 0.55A for 100pts min                
                 PWM_Soft_Handler_Low_Freq_Roof_Set (64);
             }
 
