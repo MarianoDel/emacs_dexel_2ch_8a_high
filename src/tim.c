@@ -101,6 +101,7 @@ void TIM1_Init_pwm_CH1_CH1N_trig_CH2 (void)
     // general enable for OC, and dead-time    
     // TIM1->BDTR |= TIM_BDTR_MOE;
     TIM1->BDTR |= TIM_BDTR_MOE | (0 + 20);    //300ns @ 64MHz
+    // TIM1->BDTR |= TIM_BDTR_MOE | (0 + 64);    //1us @ 64MHz    
     // TIM1->BDTR |= TIM_BDTR_MOE | (0 + 5);    //100ns @ 48MHz    
     // TIM1->BDTR |= TIM_BDTR_MOE | (128 + 28);    //3.8us @ 48MHz    
         
@@ -445,6 +446,7 @@ void TIM8_Init_pwm_CH1_CH1N_trig_CH2 (void)
     // general enable for OC, and dead-time    
     // TIM8->BDTR |= TIM_BDTR_MOE;
     TIM8->BDTR |= TIM_BDTR_MOE | (0 + 20);    //300ns @ 64MHz
+    // TIM8->BDTR |= TIM_BDTR_MOE | (0 + 64);    //1us @ 64MHz    
     // TIM8->BDTR |= TIM_BDTR_MOE | (0 + 5);    //100ns @ 48MHz    
     // TIM8->BDTR |= TIM_BDTR_MOE | (128 + 28);    //3.8us @ 48MHz    
         
